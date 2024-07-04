@@ -35,9 +35,12 @@ const userResolver = {
                 const {username, name, password, gender} = input;
                 if(!username || !name || !password || !gender)
                     throw new Error("All Fields are required");                
-                const existingUser = User.findOne({username});
+                const existingUser =  await User.findOne({where: {
+                    username: username,
+                  }});
+                console.log('ExistingUser: ',existingUser);
                 if(existingUser)
-                    throw new Error("User Already Exist");
+                    throw new Error(`User Already Exist: ${existingUser}`);
 
                 const salt = await bcrypt.genSalt(10);
                 const hashPassword = await bcrypt.hash(password,salt);
@@ -66,6 +69,7 @@ const userResolver = {
         login: async(_,{input},context) => {
             try{
                 const {username,password} = input;
+                if(!username || !password) throw new Error("All fields are required");
                 const { user } = await context.authenticate("graphql-local",{username, password});
                 await context.login(user);
                 return user;
@@ -78,11 +82,11 @@ const userResolver = {
         logout: async(_,__,context) => {
             try{
                 await context.logout();
-                req.session.destroy((err) => {
+                context.req.session.destroy((err) => {
                     if(err)
                         throw err;
                 }); 
-                res.clearCookie("connect.sid");
+                context.res.clearCookie("connect.sid");
 
                 return {message:"Logged out successfully"};
             }catch(err)

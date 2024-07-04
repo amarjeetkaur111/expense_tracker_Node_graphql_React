@@ -5,6 +5,9 @@ import Cards from "../components/Cards";
 import TransactionForm from "../components/TransactionForm";
 
 import { MdLogout } from "react-icons/md";
+import { useMutation } from "@apollo/client";
+import { LOGOUT } from "../graphql/mutations/user.mutation";
+import toast from "react-hot-toast";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -24,12 +27,22 @@ const HomePage = () => {
 			},
 		],
 	};
+	const [logout , {loading, error}] = useMutation(LOGOUT,{
+		refetchQueries:["GetAuthenticatedUser"],
+	});
 
-	const handleLogout = () => {
-		console.log("Logging out...");
+	const handleLogout = async() => {
+		try{
+			await logout();
+			//Clear Apollo Client cache FROM the DOCS
+			console.log("Logging out...");
+		}
+		catch(err){
+			console.log(err);
+			toast.error(err.message);
+		}
 	};
 
-	const loading = false;
 
 	return (
 		<>
