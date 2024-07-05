@@ -7,6 +7,7 @@ const transactionResolver = {
                 if(!context.getUser()) throw new Error("Unauthorized");
                 const userId = context.getUser()._id;
                 const transactions = Transaction.find({userId});
+                return transactions;
             }catch(err){
                 console.log("Error in All Gettransactions Query: ",err);
                 throw new Error(err.message || "Internal server Error");
@@ -61,7 +62,7 @@ const transactionResolver = {
                 if(!context.getUser()) throw new Error("Unauthorized");
                 const transaction = await Transaction.findByIdAndDelete(transactionId);
                 if(!transaction) throw new Error("Transaction not found");
-                return transaction;
+                return true;
             }catch(err){
                 console.log("Error in DeleteTransaction Mutation: ",err);
                 throw new Error(err.message || "Internal server Error");    

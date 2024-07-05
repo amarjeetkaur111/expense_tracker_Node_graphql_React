@@ -1,18 +1,58 @@
-import { useState } from "react";
+import { useMutation, useQuery } from "@apollo/client";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { GET_TRANSACTION } from "../graphql/queries/transaction.query";
+import { UPDATE_TRANSACTION } from "../graphql/mutations/transaction.mutation";
+import toast from "react-hot-toast";
+import TransactionFormSkeleton from '../components/skeletons/TransactionFormSkeleton.jsx';
 
 const TransactionPage = () => {
-	const [formData, setFormData] = useState({
-		description: "",
-		paymentType: "",
-		category: "",
-		amount: "",
-		location: "",
-		date: "",
+	const { id } = useParams();
+	const {data, loading, error} = useQuery(GET_TRANSACTION,{
+		variables: {id:id}
 	});
+
+	console.log("Transaction Data: ",data?.getTransaction);
+	const [formData, setFormData] = useState({
+		description: data?.getTransaction?.description || "",
+		paymentType: data?.getTransaction?.paymentType || "",
+		category: data?.getTransaction?.category || "",
+		amount: data?.getTransaction?.amount || "",
+		location: data?.getTransaction?.location || "",
+		date:  data?.getTransaction?.date || "",
+	});
+
+	useEffect(() => {
+		if(data)
+		setFormData({
+			description: data?.getTransaction?.description,
+			paymentType: data?.getTransaction?.paymentType,
+			category: data?.getTransaction?.category,
+			amount: data?.getTransaction?.amount,
+			location: data?.getTransaction?.location,
+			date: new Date(+data.getTransaction.date).toISOString().substr(0,10),
+		});
+	},[data]);
+
+	const [updateTransaction, {loading:updateLoading, error:updateError}] = useMutation(UPDATE_TRANSACTION);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		console.log("formData", formData);
+		const amount = parseFloat(formData.amount); //by default form amount is string
+		try{
+			await updateTransaction({
+				variables: {input:{
+						...formData,
+						amount,
+						transactionId: id
+					}
+				},
+			});
+			toast.success("Transaction Updated Successfully");
+		}catch(error){
+			console.log(error);
+			toast.error(error.message);
+		}
 	};
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
@@ -176,8 +216,9 @@ const TransactionPage = () => {
 					className='text-white font-bold w-full rounded px-4 py-2 bg-gradient-to-br
           from-pink-500 to-pink-500 hover:from-pink-600 hover:to-pink-600'
 					type='submit'
+					disabled={updateLoading}
 				>
-					Update Transaction
+					{loading ? 'Updating...' : 'Update Transaction'}
 				</button>
 			</form>
 		</div>
