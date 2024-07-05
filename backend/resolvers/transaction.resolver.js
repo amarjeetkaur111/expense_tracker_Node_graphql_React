@@ -23,7 +23,39 @@ const transactionResolver = {
                 throw new Error(err.message || "Internal server Error");
             }
         },
-        //TODO => ADD CATEGORY-STATISTICS RELATION
+        categoryStatistics: async(_,__,context) => {
+            try{
+                if(!context.getUser()) throw new Error("Unauthorized");
+                const userId = context.getUser()._id;
+                const transactions = await Transaction.find({userId});
+                const categoryMap = {};
+
+                // const transactions = {
+                //     {category:"expense" , amount:50},
+                //     {category:"expense" , amount:50},
+                //     {category:"investment" , amount:50},
+                //     {category:"savings" , amount:50},
+                // }
+
+                transactions.forEach(transaction => {
+                    if(transaction.category in categoryMap) categoryMap[transaction.category] += transaction.amount;
+                    else categoryMap[transaction.category] = transaction.amount;
+                });
+
+                //categoryMap ={expense:100,investment:50,saving:50}
+
+                return Object.entries(categoryMap).map(([category,amount]) => ({category,amount}))
+
+                // return [
+                //     { category:"expense" , amount: 100},
+                //     { category: "investment", amount: 50 },
+                //     { category: "savings", amount: 50 },
+                // ]
+            } 
+            catch(error){
+                throw new Error(error.message || "Internal server Error");
+            }
+        }
     },
     Mutation: {
         createTransaction: async(_,{input},context) => {

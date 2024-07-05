@@ -12,6 +12,11 @@ const TransactionPage = () => {
 		variables: {id:id}
 	});
 
+	const [updateTransaction, {loading:updateLoading, error:updateError}] = useMutation(UPDATE_TRANSACTION,{
+		refetchQueries:["GetTransactions","CategoryStatistics"],
+	});
+
+
 	console.log("Transaction Data: ",data?.getTransaction);
 	const [formData, setFormData] = useState({
 		description: data?.getTransaction?.description || "",
@@ -34,7 +39,6 @@ const TransactionPage = () => {
 		});
 	},[data]);
 
-	const [updateTransaction, {loading:updateLoading, error:updateError}] = useMutation(UPDATE_TRANSACTION);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
